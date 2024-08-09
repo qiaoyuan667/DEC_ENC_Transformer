@@ -1,7 +1,8 @@
 import torch
 from torch import nn
 
-from models import TimerBackbone
+import TimerBackbone
+import Embed
 
 
 class Model(nn.Module):
