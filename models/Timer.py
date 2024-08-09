@@ -3,11 +3,12 @@ from torch import nn
 
 import TimerBackbone
 import Embed
-
-
+ 
+    
 class Model(nn.Module):
     def __init__(self, configs):
         super().__init__()
+        
         self.task_name = configs.task_name
         self.ckpt_path = configs.ckpt_path
         self.patch_len = configs.patch_len
