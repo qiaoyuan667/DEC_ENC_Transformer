@@ -75,7 +75,7 @@ class Model(nn.Module):
         enc_out = enc_out.permute(0, 1, 3, 2) # [B, M, D, N]
 
         # Decoder
-        dec_out = self.head(enc_out)
+        dec_out = self.head(enc_out) 
         dec_out = dec_out.permute(0, 2, 1) # [B, S, M]
 
         # De-Normalization from Non-stationary Transformer
