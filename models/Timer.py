@@ -9,6 +9,7 @@ class Model(nn.Module):
     def __init__(self, configs):
         super().__init__()
         
+        self.output_len = configs.output_len
         self.task_name = configs.task_name
         self.ckpt_path = configs.ckpt_path
         self.patch_len = configs.patch_len
@@ -93,6 +94,8 @@ class Model(nn.Module):
         dec_out, attns = self.decoder(dec_in) # [B * M, N, D]
         dec_out = self.proj(dec_out) # [B * M, N, L]
         dec_out = dec_out.reshape(B, M, -1).transpose(1, 2) # [B, T, M]
+        
+        dec_out = dec_out[:, 0:self.output_len, :]
 
         # De-Normalization from Non-stationary Transformer
         dec_out = dec_out * stdev + means
