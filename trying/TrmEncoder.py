@@ -79,9 +79,10 @@ class Model(nn.Module):
 
         # Decoder
         self.head_nf = self.d_model * (input_len // self.patch_len)
-        self.head = FlattenHead(self.head_nf, self.pred_len, head_dropout=self.dropout)
+        self.head = FlattenHead(self.head_nf, input_len, head_dropout=self.dropout)
         dec_out = self.head(enc_out) 
         dec_out = dec_out.permute(0, 2, 1) # [B, S, M]
+        dec_out = dec_out[:, 0:self.pred_len, :]
 
         # De-Normalization from Non-stationary Transformer
         dec_out = dec_out * stdev + means
