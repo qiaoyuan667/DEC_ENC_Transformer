@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from Embed import PatchEmbedding
+from Embed import PatchEmbedding, GrowingPatchEmbedding
 from SelfAttention_Family import AttentionLayer, FullAttention
 from Transformer_EncDec import Encoder, EncoderLayer
 
@@ -9,6 +9,7 @@ from Transformer_EncDec import Encoder, EncoderLayer
 class Model(nn.Module):
     def __init__(self, configs):
         super().__init__()
+        self.input_len=configs.input_len
         self.task_name = configs.task_name
         self.patch_len = configs.patch_len
         self.stride = configs.patch_len
@@ -20,8 +21,8 @@ class Model(nn.Module):
         padding = 0
 
         # patching and embedding
-        self.patch_embedding = PatchEmbedding(
-            self.d_model, self.patch_len, self.stride, padding, self.dropout)
+        self.patch_embedding = GrowingPatchEmbedding(
+            self.d_model, self.input_len, self.stride, padding, self.dropout)
 
         # Decoder
         self.decoder = Encoder(

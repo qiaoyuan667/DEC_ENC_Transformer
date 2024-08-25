@@ -94,11 +94,12 @@ class Model(nn.Module):
         dec_out, attns = self.decoder(dec_in) # [B * M, N, D]
         dec_out = self.proj(dec_out) # [B * M, N, L]
         dec_out = dec_out.reshape(B, M, -1).transpose(1, 2) # [B, T, M]
-        
-        dec_out = dec_out[:, 0:self.output_len, :]
 
         # De-Normalization from Non-stationary Transformer
         dec_out = dec_out * stdev + means
+        
+        #dec_out = dec_out[:, 0:self.output_len, :]
+        
         if self.output_attention:
             return dec_out, attns
         return dec_out

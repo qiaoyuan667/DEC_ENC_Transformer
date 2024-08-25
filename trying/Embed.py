@@ -204,3 +204,48 @@ class PatchEmbedding(nn.Module):
         else:
             x = self.value_embedding(x)
         return self.dropout(x), n_vars
+    
+    
+class GrowingPatchEmbedding(nn.Module):
+    def __init__(self, d_model, max_patch_len, stride, padding, dropout, position_embedding=True):
+        super(GrowingPatchEmbedding, self).__init__()
+        self.max_patch_len = max_patch_len
+        self.stride = stride
+        self.padding_patch_layer = nn.ReplicationPad1d((0, padding))
+
+        # Linear projection from patch to model dimension
+        self.value_embedding = nn.Linear(max_patch_len, d_model, bias=False)
+        self.positioned = position_embedding
+
+        # Positional embedding
+        if position_embedding:
+            self.position_embedding = PositionalEmbedding(d_model)
+
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x):
+        n_vars = x.shape[1]  # 获取输入的变量数 M
+        max_len = x.shape[-1]  # 获取输入的最大时间步长 T
+
+        x = self.padding_patch_layer(x)
+
+        outputs = []
+        for i in range(1, self.max_patch_len // self.stride + 1):
+            current_patch_len = i * self.stride  # 动态计算当前补丁的长度
+            if current_patch_len > max_len:
+                break
+            # Extract the patch from the start of the sequence to the current length
+            x_patched = x[..., :current_patch_len]  # 选择从0到当前patch_len的序列
+            x_patched = x_patched.unfold(dimension=-1, size=current_patch_len, step=self.stride)
+            x_patched = torch.reshape(x_patched, (x_patched.shape[0] * x_patched.shape[1], x_patched.shape[2], x_patched.shape[3]))
+
+            if self.positioned:
+                x_patched = self.value_embedding(x_patched) + self.position_embedding(x_patched)
+            else:
+                x_patched = self.value_embedding(x_patched)
+            
+            outputs.append(x_patched)
+
+        # Concatenate all patches of different lengths along the sequence dimension
+        x = torch.cat(outputs, dim=1)
+        return self.dropout(x), n_vars
